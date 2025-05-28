@@ -1,0 +1,89 @@
+/*
+ * ESP32_MQTT.h
+ *
+ *  Created on: May 25, 2025
+ *      Author: 12114
+ */
+
+#ifndef ESP32_AT_ESP32_MQTT_H_
+#define ESP32_AT_ESP32_MQTT_H_
+
+#include "ESP32_UART.h"
+
+/*===================================================用户信息========================================================*/
+
+//服务器地址和端口
+#define MQTT_host	"\"mqtts.heclouds.com\""	//域名
+#define MQTT_port	1883						//端口
+
+//MQTT连接设置
+#define	LinkID		0						//MQTT连接ID,目前只支持0
+#define	scheme		1						//连接方式
+
+#define	client_id	"\"temperatureAndHumidity\""	//网站的	“设备名称/ID”
+#define	username	"\"SQKg9n0Ii0\""				//用户名，用于登陆 MQTT broker, 网站的"产品ID"
+													//密码，使用tokon工具生成
+#define	password	"version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757458587&method=md5&sign=YCozJxz%2BPX0Qf1coXSUd0A%3D%3D"
+
+
+#define cert_key_ID	0
+#define CA_ID		0
+#define path		"\"\""
+
+//MQTT主题和信息
+					//这是信息回复主题
+#define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""
+					//本地数据推送主题
+#define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""
+
+//传感器数据推送格式
+#define Data_Info		"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"currentTemperature\":{\"value\":22,\"time\":1747458287111},\"currenthumidity\":{\"value\":33,\"time\":1747458287111}}}"
+
+
+
+
+/*===================================================MQTT========================================================*/
+
+typedef enum
+{
+	MQTT_connected	 =	0x00U,
+	MQTT_Init		 =  0x01U,
+	MQTT_connecting  =	0x02U,
+	MQTT_connectFail =	0x03U,
+	MQTTERR	 		 =	0x04U,
+
+} MQTT_State;
+
+
+/*	存储MQTT用户属性
+ */
+typedef struct
+{
+	uint8_t		MQTT_LinkID;		//MQTT连接ID
+	uint8_t		MQTT_scheme;		//连接方式
+	char*		MQTT_client_id;		//网站的	“设备名称/ID”
+	char*		MQTT_username;		//用户名，用于登陆 MQTT broker, 网站的"产品ID"
+	char*		MQTT_password;		//密码，使用tokon工具生成
+
+} MQTT_Data;
+
+
+/*	MQTT功能
+ *
+ */
+typedef struct
+{
+	volatile MQTT_State	MQTT_state;
+	MQTT_Data			MQTT_Data;
+
+
+} AT_MQTT_HandleTypeDef;
+
+
+/*===================================================函数========================================================*/
+
+void ESP32_MQTT_Init(uint8_t num);
+void MQTT_Connect(uint8_t num);
+void MQTT_DisConnect();
+
+#endif /* ESP32_AT_ESP32_MQTT_H_ */
