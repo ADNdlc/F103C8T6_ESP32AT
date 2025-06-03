@@ -12,6 +12,9 @@
 #include "../delay/delay.h"
 
 
+extern uint8_t humiture[2];
+
+
 #define DHT11_DA_Pin	GPIO_PIN_4
 #define DHT11_DA_Port	GPIOA
 
@@ -21,6 +24,7 @@ void DHT11_RST (void);
 uint8_t Dht11_Check(void);
 uint8_t Dht11_ReadBit(void);
 uint8_t Dht11_ReadByte(void);
+
 uint8_t DHT11_Init (void);
 uint8_t DHT11_ReadData(uint8_t *h);
 

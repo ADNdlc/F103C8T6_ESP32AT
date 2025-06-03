@@ -9,37 +9,48 @@
 #define ESP32_AT_ESP32_MQTT_H_
 
 #include "ESP32_UART.h"
+#include "sensor_data.h"
 
-/*===================================================用户信息========================================================*/
+/*===================================================MQTT信息========================================================*/
 
 //服务器地址和端口
 #define MQTT_host	"\"mqtts.heclouds.com\""	//域名
 #define MQTT_port	1883						//端口
 
 //MQTT连接设置
-#define	LinkID		0						//MQTT连接ID,目前只支持0
+#define	LinkID		0						//MQTT连接ID,目前模块只支持0
 #define	scheme		1						//连接方式
+
+
+#define msg_ID "\"123\""
+#define mqtt_version "\"1.0\""
+
 
 #define	client_id	"\"temperatureAndHumidity\""	//网站的	“设备名称/ID”
 #define	username	"\"SQKg9n0Ii0\""				//用户名，用于登陆 MQTT broker, 网站的"产品ID"
-													//密码，使用tokon工具生成
+
+					/*密码，使用tokon工具生成*/
 #define	password	"version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757458587&method=md5&sign=YCozJxz%2BPX0Qf1coXSUd0A%3D%3D"
 
 
+//这些参数现在还没用仅作占位和格式构建
 #define cert_key_ID	0
 #define CA_ID		0
 #define path		"\"\""
 
-//MQTT主题和信息
-					//这是信息回复主题
-#define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""
-					//本地数据推送主题
-#define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""
+
+//DHT11使用的MQTT主题和信息（这是在网站定义的）
+#define dht11
+
+#ifdef dht11
+
+#define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""//这是信息回复主题
+#define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""//本地数据推送主题
 
 //传感器数据推送格式
 #define Data_Info		"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"currentTemperature\":{\"value\":22,\"time\":1747458287111},\"currenthumidity\":{\"value\":33,\"time\":1747458287111}}}"
 
-
+#endif
 
 
 /*===================================================MQTT========================================================*/
@@ -69,7 +80,6 @@ typedef struct
 
 
 /*	MQTT功能
- *
  */
 typedef struct
 {
@@ -80,10 +90,21 @@ typedef struct
 } AT_MQTT_HandleTypeDef;
 
 
-/*===================================================函数========================================================*/
+
+extern AT_MQTT_HandleTypeDef	ESP32_MQTT;
+
+/*===================================================连接函数========================================================*/
 
 void ESP32_MQTT_Init(uint8_t num);
 void MQTT_Connect(uint8_t num);
 void MQTT_DisConnect();
+
+uint16_t Calculate_json_length_simple(Sensor* S);
+uint16_t Calculate_json_length(Sensor* data);
+
+/*===================================================发布函数========================================================*/
+
+uint8_t MQTT_Publish_Data(uint8_t num, Sensor* S, const char* topic, uint8_t qos, uint8_t retain);
+
 
 #endif /* ESP32_AT_ESP32_MQTT_H_ */

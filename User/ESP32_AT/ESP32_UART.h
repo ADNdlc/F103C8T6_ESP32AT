@@ -12,6 +12,7 @@
 #include "usart.h"
 #include "string.h"
 #include <stdarg.h>
+#include <stdio.h>
 
 #define ATEtoUART1  1	//打印信息到串口一
 #define ATEtoUART1_IQR  0	//打印信息到串口一()
@@ -43,8 +44,7 @@ typedef enum
 } CMD_State;
 
 typedef struct{
-
-	UART_HandleTypeDef*		Command_UART;
+	UART_HandleTypeDef* Command_UART;
 
 	UART_State 	Uart_State;				//模块串口状态
 	CMD_State	Cmd_State;				//模块命令状态
@@ -55,7 +55,7 @@ typedef struct{
 
 	uint8_t 	Reply_Data[buff_Size];	//数据缓冲区
 
-}AT_UART_HandleTypeDef;
+} AT_UART_HandleTypeDef;
 
 
 /*========================================外部声明===========================================*/
@@ -69,12 +69,13 @@ uint8_t Read_buffer(uint16_t i);
 uint16_t Get_UNhandled();
 uint16_t Get_Empty();
 uint16_t Write_buffer(const uint8_t* data,uint16_t length);
-
+void Clear_loopbuffer(uint16_t waittime);
 /*========================================通信函数===========================================*/
 
 void AT_Send(const char* __restrict__ Command, ...);
 void AT_Send_callee(char* buffer,uint16_t length,uint16_t buf_length);
-char* ESP32_UART_Checkcmd(char *str, uint32_t waittime);
+void AT_Send_HEX(uint8_t* buffer);
+char* ESP32_UART_Checkcmd(char *str, uint32_t waittime,uint8_t extend);
 
 uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *ack, const char* __restrict__ Command, ...);
 
@@ -93,7 +94,7 @@ void ESP32_RxCpltHandle(UART_HandleTypeDef *huart,uint16_t Size);
 
 /*====================================================初始化==========================================================*/
 
-void ESP32_UART_Init(UART_HandleTypeDef *huartx);
+uint8_t ESP32_UART_Init(UART_HandleTypeDef *huartx);
 
 
 #endif /* ESP32_AT_ESP32_UART_H_ */

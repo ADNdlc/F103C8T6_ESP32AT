@@ -61,8 +61,6 @@ void Error_Handler(void);
 #define btn1_GPIO_Port GPIOA
 #define btn2_Pin GPIO_PIN_2
 #define btn2_GPIO_Port GPIOA
-#define DHT11_DA_Pin_Pin GPIO_PIN_4
-#define DHT11_DA_Pin_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

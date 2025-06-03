@@ -21,10 +21,12 @@
 
 */
 
-
-
 #include "dht11.h"
 #include "main.h"
+
+
+uint8_t humiture[2] = {0};//存放传感器数据，顺序为 0湿度 1温度
+
 
 void DHT11_IO_OUT (void){ //端口变为输出
 	GPIO_InitTypeDef GPIO_InitStruct = {0};

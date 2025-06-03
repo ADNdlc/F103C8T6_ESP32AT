@@ -21,13 +21,6 @@
 #define AP_PWD  	"\"yu778866\""
 
 
-void ESP32_WiFi_Init(void);
-void WiFi_DisConnect();
-void WiFi_Connect();
-
-
-
-
 /*===================================================WiFi========================================================*/
 
 /*	<mode>：模式
@@ -41,19 +34,31 @@ typedef enum
 	WiFi_RFClose =	0x00U,
 	WiFi_Station =	0x01U,
 	WiFi_SoftAP	 =	0x02U,
-	WiFi_Mixed	 =	0x03U
+	WiFi_Mixed	 =	0x03U,
+	ModeERR		 =	-1//没有这种模式
 } WiFi_Mode;
 
 
 /*	WiFi状态
+ * 	<state>：模块返回码
+ *	0: ESP32 station 尚未进行任何 Wi-Fi 连接
+ *	1: ESP32 station 已经连接上 AP，但尚未获取到 IPv4 地址
+ *	2: ESP32 station 已经连接上 AP，并已经获取到 IPv4 地址
+ *	3: ESP32 station 正在进行 Wi-Fi 连接或 Wi-Fi 重连
+ *	4: ESP32 station 处于 Wi-Fi 断开状态
+ *
+ *	模块行为：
+ *	如果设置了自动连接AP，上电后自动尝试重连上次连接的WiFi
+ *	失败后进入4，然后3和4间隔切换(大概2s)，直到发送AT+CWQAP停止连接稳定在4或连接上AP
  */
 typedef enum
 {
-	WiFi_connected	 =	0x00U,
-	WiFi_Init		 =  0x01U,
-	WiFi_connecting  =	0x02U,
-	WiFi_connectFail =	0x03U,
-	WiFiERR	 		 =	0x04U,
+	WiFi_connected	 =	0x00U,//2  可以上网
+	WiFi_NOIP 		 =	0x01U,//1
+	WiFi_NOconnect	 =  0x02U,//0
+	WiFi_connecting  =	0x03U,//3
+	WiFi_DISconnect  =	0x04U,//4
+	StateERR		 =	-1//没有这种状态
 } WiFi_State;
 
 
@@ -93,5 +98,19 @@ typedef struct
 	AP_Data				AP_Data;
 
 } AT_WiFi_HandleTypeDef;
+
+extern AT_WiFi_HandleTypeDef	ESP32_WiFi;
+
+/*===================================================初始化========================================================*/
+uint8_t ESP32_WiFi_Init(uint8_t Num);
+
+/*====================================================WiFi模式==========================================================*/
+WiFi_Mode WiFi_GetMODE(void);
+uint8_t WiFi_SetState(WiFi_Mode mode, uint8_t auto_connect);
+
+/*===================================================WiFi状态==========================================================*/
+WiFi_State WiFi_GetState(void);
+void WiFi_DisConnect();
+uint8_t WiFi_Connect(char *SSID, char *PWD);
 
 #endif /* ESP32_AT_ESP32_WIFI_H_ */

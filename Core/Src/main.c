@@ -33,6 +33,8 @@
 #include "../../User/ESP32_AT/ESP32_UART.h"
 #include "../../User/ESP32_AT/ESP32_WiFi.h"
 #include "../../User/ESP32_AT/ESP32_MQTT.h"
+#include "../../User/ESP32_AT/Timestamp.h"
+#include "../../User/dht11/dht11_MQTT.h"
 
 /* USER CODE END Includes */
 
@@ -66,8 +68,22 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+//*==========================================传感器数组==========================================*//
+uint8_t DHT11time = 0;
+char humitureDATA[25] = {0};//存放传感器显示内容
+
+//*==========================================时间戳获取==========================================*//
+uint32_t Timestamp = 0;
+uint8_t updatetime = 0;
+char TimestampDATA[25] = {0};
+
+//*==========================================模块状态==========================================*//
+char ESP_State[25] = {0};
+
 /*实例化按钮*/
 Button btn1;
+Button btn2;
 
 /*点击事件*/
 /*================btn1========================*/
@@ -83,7 +99,7 @@ void btn1_double_click(Button* btn) {
 	printf("\r\nbtn1_double_click\r\n");
     // 双击处理
 
-	WiFi_Connect();
+	WiFi_Connect(Wifi_SSID, Wifi_PWD);
 }
 
 void btn1_triple_click(Button* btn) {
@@ -125,7 +141,7 @@ void btn2_long_click(Button* btn) {
 
 
 uint16_t fps = 0, fps_max = 0;
-char buffer[50] = {0};//用于格式化显示
+char buffer[25] = {0};//用于格式化显示
 
 //重定义'定时器周期回调'函数
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){	//1S周期回调
@@ -135,6 +151,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){	//1S周期回调
 			fps_max = fps;
 		}
 		fps = 0;
+		updatetime++;
+		DHT11time++;
 	}
 }
 
@@ -158,7 +176,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 		__HAL_DMA_DISABLE_IT(&hdma_usart1_rx,DMA_IT_HT);//关闭DMA接收过半中断
 	}
 
-	ESP32_RxCpltHandle(huart,Size);
+	ESP32_RxCpltHandle(huart,Size);//处理ESP32回传数据
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -166,6 +184,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	//ESP32发送完成处理
 	ESP32_TxCpltHandle(huart);
 }
+
 
 /* USER CODE END 0 */
 
@@ -204,17 +223,9 @@ int main(void)
   MX_TIM2_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  //*==========================================基础功能初始化==========================================*//
   RetargetInit(&huart1);//将printf()函数映射到UART1串口上
   OLED_Init();
-
-
-
-  //*==========================================ESP初始化==========================================*//
-  ESP32_UART_Init(&huart3);
-  ESP32_WiFi_Init();
-  ESP32_MQTT_Init(3);
-  MQTT_Connect(3);
-
 
   //初始化按键
   Button_Init(&btn1,btn1_GPIO_Port,btn1_Pin,GPIO_PIN_RESET);
@@ -222,9 +233,28 @@ int main(void)
   btn1.DoublePressHandler = btn1_double_click;
   btn1.TriplePressHandler = btn1_triple_click;
   btn1.LongPressHandler = btn1_long_click;
+  Button_Init(&btn2,btn2_GPIO_Port,btn2_Pin,GPIO_PIN_RESET);
+  btn2.SinglePressHandler = btn2_single_click;
+  btn2.DoublePressHandler = btn2_double_click;
+  btn2.TriplePressHandler = btn2_triple_click;
+  btn2.LongPressHandler = btn2_long_click;
+
+  //*==========================================ESP32初始化==========================================*//
+  if(!ESP32_UART_Init(&huart3)){//通信初始化
+
+	  ESP32_WiFi_Init(3);//WiFi连接
+	  ESP32_MQTT_Init(3);//MQTT信息初始化
+	  MQTT_Connect(3);//连接OneNET
+	  SetServer(3);//SNTP服务器
+  }
 
 
 
+  //*==========================================传感器初始化==========================================*//
+  DHT11_Init ();
+  dht11_MQTTInit();
+
+  //*==========================================片上功能开启==========================================*//
   HAL_UARTEx_ReceiveToIdle_DMA(&huart1, (uint8_t*)receivData, 50);//开启接收，末参数为最大长度
   __HAL_DMA_DISABLE_IT(&hdma_usart1_rx,DMA_IT_HT);//关闭DMA接收过半中断
 
@@ -242,14 +272,43 @@ int main(void)
 		  dataReady = 0;
 	  }
 
+	  if((updatetime>=5)&&(ESP_time.ServerON)){
+
+		  GET_Time(500,3);//更新时间
+		  Timestamp = cst_to_unix(&ESP_time);
+#if(ATEtoUART1 == 1)
+		  printf("\r\nTime:%lu",Timestamp);
+#endif
+		  updatetime = 0;
+	  }
+
+	  if((DHT11time>=5)){
+		  //读取传感器值,值在humiture数组里
+		  DHT11_ReadData(humiture);
+		  if(ESP32_MQTT.MQTT_state==MQTT_connected){
+			dht11_MQTT_updataANDpublish(Sensor_dht11,humiture);
+		  }
+		  DHT11time = 0;
+	  }
+
+
+
+
 
 	  Button_Update(&btn1);
+	  Button_Update(&btn2);
 	//dosomething...
 
-	//显示帧数
+	//显示
 	OLED_NewFrame();
-	sprintf(buffer,"%u %u s", fps_max, fps);
+	sprintf(buffer,"%u %u A", fps_max, fps);
+	sprintf(humitureDATA,"T:%02d H:%02d", humiture[1], humiture[0]);
+	sprintf(TimestampDATA,"%lu",Timestamp);//显示时间戳
+	sprintf(ESP_State,"Cm%d WF%d MQ%d",ESP32_UART.Cmd_State,ESP32_WiFi.WiFi_state,ESP32_MQTT.MQTT_state);//显示状态
 	OLED_PrintASCIIString(0, 0, buffer, &afont16x8, OLED_COLOR_NORMAL);
+	OLED_PrintASCIIString(0, 16, humitureDATA, &afont16x8, OLED_COLOR_NORMAL);
+	OLED_PrintASCIIString(0, 32, TimestampDATA, &afont16x8, OLED_COLOR_NORMAL);//显示时间戳
+	OLED_PrintASCIIString(0, 48, ESP_State, &afont16x8, OLED_COLOR_NORMAL);//显示状态
 	OLED_ShowFrame();
 	fps++;//每刷新一帧++
 
