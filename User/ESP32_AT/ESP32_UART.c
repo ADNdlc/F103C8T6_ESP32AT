@@ -33,9 +33,6 @@ AT_UART_HandleTypeDef	ESP32_UART={
 */
 void Add_ReadIndex(uint16_t length){
 	ESP32_UART.readIndex = (ESP32_UART.readIndex + length) % buff_Size;
-
-//	ESP32_UART.readIndex += length;
-//	ESP32_UART.readIndex %= buff_Size;
 }
 
 
@@ -115,13 +112,13 @@ void Clear_loopbuffer(uint16_t waittime){
 	    while (HAL_GetTick() - start_time <= waittime) {
 
 	        if ( (Size = Get_UNhandled()) ) {
-#if(ATEtoUART1 == 1)
+#if(Clear_UNhandled == 1)
 	            printf("\r\nClear:UNhandled %d",Size);
 #endif
 	            Add_ReadIndex(Size); // 清空残留数据
 	            data_found = 1;   	 // 标记数据残留，进行循环
 	            start_time = HAL_GetTick(); // 重置超时计时
-#if(ATEtoUART1 == 1)
+#if(Clear_cleared == 1)
 	            printf("\r\nClear:cleared %d",Size);
 #endif
 	        }
@@ -162,7 +159,7 @@ void AT_Send(const char* __restrict__ Command, ...){
 
 		ESP32_UART.Uart_State = Sending;//状态置位
 
-#if(ATEtoUART1 == 1)
+#if(AT_Send_CMD == 1)
 		printf("\r\n\r\nSendCMD:%s ",Command);
 #endif
 #if(ATEtoUART1_IQR == 1)
@@ -192,7 +189,7 @@ void AT_Send_callee(char* buffer,uint16_t length,uint16_t buf_length){
 
 		ESP32_UART.Uart_State = Sending;//状态置位
 
-#if(ATEtoUART1 == 1)
+#if(AT_Send_CMD == 1)
 		printf("\r\nSendCMD:%s ",buffer);
 #endif
 #if(ATEtoUART1_IQR == 1)
@@ -214,7 +211,7 @@ void AT_Send_HEX(uint8_t* buffer){
 
 	ESP32_UART.Uart_State = Sending;//状态置位
 
-#if(ATEtoUART1 == 1)
+#if(AT_Send_CMD == 1)
 	printf("\r\nSendHEX:%d %d...%d %d ",buffer[0],buffer[1],buffer[Size-2],buffer[Size-1]);
 #endif
 #if(ATEtoUART1_IQR == 1)
@@ -238,13 +235,13 @@ void AT_Send_HEX(uint8_t* buffer){
  * @return	返回查找到的期望答复的地址
  *
  */
-char* ESP32_UART_Checkcmd(char *str, uint32_t waittime,uint8_t extend){
+char* ESP32_UART_Checkcmd(char *ack, uint32_t waittime,uint8_t extend){
 	static uint8_t cmd_buffer[512];//这是所有消息公用的最后的存储区
 	uint32_t Time=0;//上次收到消息时间
 	char *strx = NULL;
 	uint16_t Size=0;
 	uint8_t MAX_Cmd = 15;
-	uint8_t length = strlen(str);
+	uint8_t length = strlen(ack);
 
 	length += extend;
 
@@ -260,21 +257,23 @@ char* ESP32_UART_Checkcmd(char *str, uint32_t waittime,uint8_t extend){
 				}
 				Add_ReadIndex(Size);//增加读索引(已读出判断)
 
-#if(ATEtoUART1 == 1)
+#if(Checkcmd_RIndx == 1)
 				printf("\r\nCheckcmd:RIndx %d ",ESP32_UART.readIndex);
 #endif
 
 				/*开始判断*/
-				strx = strstr((char*)cmd_buffer,str);
+				strx = strstr((char*)cmd_buffer,ack);
 
 				//添加结束符
 				if (strx != NULL && (strx+length+1 - (char*)cmd_buffer) < sizeof(cmd_buffer)){
 				    strx[length] = '\0';
 					ESP32_UART.Cmd_State = Success;
 
-#if(ATEtoUART1 == 1)
+#if(Checkcmd_buffer == 1)
 				printf("\r\nCheckcmd:buffer|%s|end",cmd_buffer);//拷贝过来的回复消息
-				printf("\r\nCheckcmd:strx|%s|end",strx);		//返回的指针指向
+#endif
+#if(Checkcmd_ack == 1)
+				printf("\r\nCheckcmd:ack|%s|end",ack);		//返回的指针指向
 #endif
 					return strx;
 
@@ -302,7 +301,7 @@ char* ESP32_UART_Checkcmd(char *str, uint32_t waittime,uint8_t extend){
  * @return	0/1  成功返回0
  *
  */
-uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *ack, const char* __restrict__ Command, ...){
+uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *espack, const char* __restrict__ Command, ...){
 	char buffer[1024];  //缓冲区大小(至少要装下网站的token)
 	va_list args;
 	va_start(args, Command);
@@ -316,20 +315,20 @@ uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *ack, const char* __restrict
 
 	AT_Send_callee(buffer,length,buf_length);//发送
 
-	char* strx;
-	strx = ESP32_UART_Checkcmd(ack,waittime,0);
-	if( strx != NULL){
+	char* xstr;
+	xstr = ESP32_UART_Checkcmd(espack,waittime,0);
+	if( xstr != NULL){
 
-#if(ATEtoUART1 == 1)
-		printf("\r\nsADNc:strx|%s|end",strx);//成功
+#if(SendANDCheck_ack == 1)
+		printf("\r\nsADNc:ack|%s|end",xstr);//成功
 #endif
 
 		return 0;
 	}
 	else{
 
-#if(ATEtoUART1 == 1)
-		printf("\r\nsADNc:strx NULL");//失败
+#if(SendANDCheck_ack == 1)
+		printf("\r\nsADNc:ack NULL");//失败
 #endif
 
 		return 1;
@@ -352,14 +351,14 @@ uint8_t ESP32_SendANDCheck_(char *cmd, char *ack, uint32_t waittime){
 	char* strx;
 	strx = ESP32_UART_Checkcmd(ack,waittime,0);
 	if( strx != NULL){//成功
-#if(ATEtoUART1 == 1)
-		printf("\r\nsADNc_:strx|%s|end",strx);
+#if(SendANDCheck_ack == 1)
+		printf("\r\nsADNc_:ack|%s|end",strx);
 #endif
 		return 0;
 	}
 	else{
-#if(ATEtoUART1 == 1)
-		printf("\r\nsADNc_:strx NULL");
+#if(SendANDCheck_NULL == 1)
+		printf("\r\nsADNc_:ack NULL");
 #endif
 		return 1;
 	}
@@ -367,10 +366,9 @@ uint8_t ESP32_SendANDCheck_(char *cmd, char *ack, uint32_t waittime){
 
 /*====================================================中断相关==========================================================*/
 
-/*	ESP32发送完成处理,写在 HAL_UART_TxCpltCallback 发送完成回调 函数里
+/*	ESP32发送完成处理,放在 HAL_UART_TxCpltCallback 发送完成回调 函数里
  */
 void ESP32_TxCpltHandle(UART_HandleTypeDef *huart){
-	//if(huart->Instance == ESP32_UART.Command_UART->Instance){
 	if(huart == ESP32_UART.Command_UART){
 		ESP32_UART.Uart_State = Waiting;//发送完成等待模块响应
 
@@ -390,7 +388,6 @@ void ESP32_TxCpltHandle(UART_HandleTypeDef *huart){
  */
 void ESP32_RxCpltHandle(UART_HandleTypeDef *huart,uint16_t Size){
 	//这里是接收中断内
-
 #if(ATEtoUART1_IQR == 1)
 		printf("\r\nRx:InIT ");//将刚收到的发送到串口一
 #endif
@@ -401,7 +398,6 @@ void ESP32_RxCpltHandle(UART_HandleTypeDef *huart,uint16_t Size){
 		printf("\r\nRx:InU3 ");//将刚收到的发送到串口一
 #endif
 
-	//if(huart->Instance == ESP32_UART.Command_UART->Instance){
 		if((ESP32_UART.Uart_State != Waiting)&&(ESP32_UART.Uart_State != Free)){
 			ESP32_UART.Uart_State=Overload;printf("\r\nRx:Overload\r\n");return;
 		}//过载停止接收
@@ -414,7 +410,7 @@ void ESP32_RxCpltHandle(UART_HandleTypeDef *huart,uint16_t Size){
 		__HAL_DMA_DISABLE_IT(hdma_AT_rx,DMA_IT_HT);//关闭相关DMA接收过半中断
 
 #if(ATEtoUART1 == 1)
-		printf("\r\nRx:buf|%s|end",UART_buffer);//打印此次收到内容
+		printf("\r\nRx:buf|%s|end",UART_buffer);//打印此次收到内容(耗时太长)
 #endif
 	}
 }
@@ -443,7 +439,7 @@ uint8_t ESP32_UART_Init(UART_HandleTypeDef *huartx){
 	strx = ESP32_UART_Checkcmd("ready",2000,0);
 	if( strx != NULL){//复位成功
 
-#if(ATEtoUART1 == 1)
+#if(UART_Init == 1)
 		printf("\r\nUART_Init:%s Success",strx);
 #endif
 
@@ -453,16 +449,23 @@ uint8_t ESP32_UART_Init(UART_HandleTypeDef *huartx){
 		ESP32_WiFi.WiFi_state = StateERR;
 		ESP32_MQTT.MQTT_state = MQTTERR;
 
+#if(UART_Init == 1)
 		printf("\r\nUART_Init:ready Fail ");
+#endif
+
 		return 1;
 	}
 
-	if(ESP32_SendANDCheck(200,"OK","ATE0"))
+	if(!ESP32_SendANDCheck(200,"OK","ATE0"))
 	{
-		printf("\r\nUART_Init:ATE0_Fail ");
+#if(UART_Init == 1)
+		printf("\r\nUART_Init:ATE0_Success");
+#endif
 	}
 	else{
-		printf("\r\nUART_Init:ATE0_Success ");
+#if(UART_Init == 1)
+		printf("\r\nUART_Init:ATE0_Fail");
+#endif
 	}
 
 	return 0;

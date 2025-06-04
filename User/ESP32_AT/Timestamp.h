@@ -10,6 +10,17 @@
 
 #include "ESP32_WiFi.h"
 
+/*ߜ----------------------------------------ߜ打印信息开关ߜ---------------------------------------ߜ*/
+//SetServer:
+#define SetServer_SorF  1	//连接成败信息
+
+//GET_Time:
+#define GET_Time_ack	1	//期望答复
+#define GET_Time_sscanf 1	//sscanf成败
+#define GET_Time_Server 1	//SNTP服务器状态
+
+/*ߡ-------------------------------------ߡ打印信息开关ߡ-----------------------------------------ߡ*/
+
 
 /*==================================================时间戳服务器========================================================*/
 
@@ -36,8 +47,8 @@ typedef struct {
 
 extern  Time ESP_time;
 
-void SetServer(uint8_t Num);
-void GET_Time(uint32_t waittime,uint8_t Num);
+uint8_t SetServer(uint8_t Num);
+uint8_t GET_Time(uint32_t waittime,uint8_t Num);
 uint32_t cst_to_unix(const Time* t);
 
 #endif /* ESP32_AT_TIMESTAMP_H_ */

@@ -3,6 +3,8 @@
  *
  *  Created on: May 24, 2025
  *      Author: 12114
+ *
+ *
  */
 
 #ifndef ESP32_AT_ESP32_UART_H_
@@ -14,13 +16,30 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#define ATEtoUART1  1	//打印信息到串口一
-#define ATEtoUART1_IQR  0	//打印信息到串口一()
+/*ߜ----------------------------------------ߜ打印信息开关ߜ---------------------------------------ߜ*/
 
-#if(ATEtoUART1 == 1)
-#include "../../Core/Inc/retarget.h"
-#endif
+#define ATEtoUART1_IQR  0	//中断内打印(不要这样做)
 
+//Clear_loopbuffer:
+#define Clear_UNhandled 1	//循环缓冲区没有处理的数据大小
+#define Clear_cleared	1	//查看有没有清理成功
+
+//三个AT_Send:
+#define AT_Send_CMD		1	//将所有发送给模块的指令和内容通过printf的串口输出
+
+//ESP32_UART_Checkcmd:
+#define Checkcmd_RIndx	1	//当前循环缓冲区的读指针位置
+#define Checkcmd_buffer 1	//Checkcmd函数全局缓存区内容
+#define Checkcmd_ack	1	//检查到的期望答复
+
+//ESP32_SendANDCheck:
+#define SendANDCheck_ack	1	//打印检查到的期望答复或失败时打印NULL
+
+//ESP32_UART_Init:
+#define UART_Init		1	//UART初始化信息
+
+
+/*ߡ-------------------------------------ߡ打印信息开关ߡ-----------------------------------------ߡ*/
 
 #define	buff_Size	1024	//模块回复消息的缓冲区大小
 
@@ -58,19 +77,20 @@ typedef struct{
 } AT_UART_HandleTypeDef;
 
 
-/*========================================外部声明===========================================*/
+/*===========================================外部声明=========================================*/
 
 extern AT_UART_HandleTypeDef	ESP32_UART;
 
-/*========================================循环缓冲区管理===========================================*/
+/*========================================循环缓冲区管理=======================================*/
 
 void Add_ReadIndex(uint16_t length);
 uint8_t Read_buffer(uint16_t i);
 uint16_t Get_UNhandled();
 uint16_t Get_Empty();
 uint16_t Write_buffer(const uint8_t* data,uint16_t length);
+
 void Clear_loopbuffer(uint16_t waittime);
-/*========================================通信函数===========================================*/
+/*===========================================通信函数==========================================*/
 
 void AT_Send(const char* __restrict__ Command, ...);
 void AT_Send_callee(char* buffer,uint16_t length,uint16_t buf_length);

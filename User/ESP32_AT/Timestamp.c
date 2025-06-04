@@ -53,25 +53,30 @@ void Time_transform(void){
 /* @brief	设置使用哪个SNTP服务器
  *
  */
-void SetServer(uint8_t Num){
+uint8_t SetServer(uint8_t Num){
 
-	while(Num--){
+	do{
 		//设置SNTP服务器
 		Clear_loopbuffer(500);
 		if(ESP32_SendANDCheck(3000,"+TIME_UPDATED","AT+CIPSNTPCFG=1,%d,%s",timezone,SNTPServer)){
-#if(ATEtoUART1 == 1)
-			printf("\r\nSNTPServer:Fail ");
+#if(SetServer_SorF == 1)
+			printf("\r\nSNTPServer:Fail retry..");
 #endif
+			Num--;
 			continue;//重试
 		}
 		else{
 			ESP_time.ServerON = 1;
-#if(ATEtoUART1 == 1)
-			printf("\r\nSNTPServer:Success ");//成功返回0
+#if(SetServer_SorF == 1)
+			printf("\r\nSNTPServer:Success");//成功返回0
 #endif
-			return;
+			return 0;
 		}
-	}
+	}while(Num);
+#if(SetServer_SorF == 1)
+			printf("\r\nSNTPServer:Fail stop");
+#endif
+	return 1;
 }
 
 
@@ -80,24 +85,26 @@ void SetServer(uint8_t Num){
  * @param	waittime 等待时间
  * @param	Num 	 重试次数
  *
+ * @return  0成功  1服务器掉线  2失败
  */
-void GET_Time(uint32_t waittime,uint8_t Num){
+uint8_t GET_Time(uint32_t waittime,uint8_t Num){
 	char *strx = NULL;
 
 if(ESP_time.ServerON){//ServerON==1
 
-		while(Num--){//查询时间重试
+		do{//查询时间重试
 
 			Clear_loopbuffer(500);
 
 			AT_Send("AT+CIPSNTPTIME?");//发送查询时间命令(服务器返回的是CST时间)
 
 			strx = ESP32_UART_Checkcmd("SNTPTIME:",700,24);//没找到返回Null
+
 			if(strx){
 				//此时时间在ESP32_UART_Checkcmd的cmd_buffer数组里
 
-#if(ATEtoUART1 == 1)
-					printf("\r\nGET_Time:strx|%s|end",strx);
+#if(GET_Time_ack == 1)
+					printf("\r\nGET_Time:ack|%s|end",strx);
 #endif
 
 				int tmp_year, tmp_day, tmp_hour, tmp_min, tmp_sec;
@@ -118,34 +125,38 @@ if(ESP_time.ServerON){//ServerON==1
 
 
 					Time_transform();//字符串数据转换
-					printf("\r\nSNTPdata:OK");
-
-					return;
-
+#if(GET_Time_sscanf == 1)
+					printf("\r\nGET_Time:sscanf OK");
+#endif
+					return 0;
 
 				}else{
-#if(ATEtoUART1 == 1)
-					printf("\r\nSNTPdata:ERR");
+#if(GET_Time_sscanf == 1)
+					printf("\r\nGET_Time:sscanf Fail retry..");
 #endif
+					Num--;
 					continue;//重试
 				}
 
 
-			}
-			else{
-#if(ATEtoUART1 == 1)
-				printf("\r\nSNTPtime:NULL");
+			}//strx判空
+			else
+			{
+				Num--;
+#if(GET_Time_ack == 1)
+				printf("\r\nGET_Time:ack NULL retry..");
 #endif
 				continue;//重试
 			}
-		}//查询时间重试
+		}while(Num);//查询时间重试
+		return 2;
 
 	}//ServerON==1
 	else{
-		#if(ATEtoUART1 == 1)
-				printf("\r\nSNTPtime:NOServer");
-		#endif
-		return;
+#if(GET_Time_Server == 1)
+		printf("\r\nSNTPServer:NO");
+#endif
+		return 1;
 	}
 }
 

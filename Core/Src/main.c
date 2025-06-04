@@ -246,6 +246,9 @@ int main(void)
 	  ESP32_MQTT_Init(3);//MQTT信息初始化
 	  MQTT_Connect(3);//连接OneNET
 	  SetServer(3);//SNTP服务器
+	  if(ESP32_MQTT.MQTT_state == MQTT_connected){
+		  MQTT_Subscribe(2,Info_Topic,0);
+	  }
   }
 
 
@@ -259,6 +262,8 @@ int main(void)
   __HAL_DMA_DISABLE_IT(&hdma_usart1_rx,DMA_IT_HT);//关闭DMA接收过半中断
 
   HAL_TIM_Base_Start_IT(&htim2);//开启定时
+
+  char* onenetack = NULL;
 
   /* USER CODE END 2 */
 
@@ -291,6 +296,10 @@ int main(void)
 		  DHT11time = 0;
 	  }
 
+	  onenetack = ESP32_UART_Checkcmd("+MQTTSUBRECV",100,0);
+	  if(onenetack){
+		  printf("%s",onenetack);
+	  }
 
 
 

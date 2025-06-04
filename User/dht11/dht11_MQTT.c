@@ -21,17 +21,17 @@ void dht11_MQTTInit(){
 
 
 uint8_t dht11_MQTT_updataANDpublish(Sensor* S,uint8_t* data){
+	char *JSON = NULL;
 
 	//更新时间
 	uint32_t Timestamp = cst_to_unix(&ESP_time);
 	//更新数据点值
 	Sensor_Change_PointValue(S,T_TAG,Timestamp,T_Type,data[1]);
 	Sensor_Change_PointValue(S,H_TAG,Timestamp,H_Type,data[0]);
+	JSON = MQTT_Bulid_JSON(S);
 
 	if(ESP32_MQTT.MQTT_state == MQTT_connected){
-	//if(1){
-		//发布
-		MQTT_Publish_Data(2,S,publish_Topic,0,0);
+		MQTT_Publish_Data(2,JSON,publish_Topic,0,0);//发布
 		return 0;
 	}
 	else{

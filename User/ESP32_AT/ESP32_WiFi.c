@@ -77,9 +77,9 @@ uint8_t ESP32_WiFi_Init(uint8_t Num){
 				//查询模块是否切换状态
 				if(WiFi_GetState() == WiFi_connected){//重连成功,可以上网,初始化成功
 					ESP32_WiFi.WiFi_state = WiFi_GetState();
+#if(WiFi_Init == 1)
 					printf("\r\nWF_Connect:Success ");
-#if(ATEtoUART1 == 1)
-					printf("\r\nWF_Connect:%d",ESP32_WiFi.WiFi_state);
+					printf("\r\nWF_state:%d",ESP32_WiFi.WiFi_state);
 #endif
 					return 0;
 				}
@@ -123,17 +123,17 @@ uint8_t ESP32_WiFi_Init(uint8_t Num){
  */
 WiFi_Mode WiFi_GetMODE(void){
 	unsigned short MODE = 0;
-	char* strx = NULL;
+	char* ack = NULL;
 	Clear_loopbuffer(500);
 	AT_Send("AT+CWMODE?");//查询WiFi状态
-	strx = ESP32_UART_Checkcmd("+CWMODE:",500,1);//格局结果返回WiFi_State
-	if(strx){
-#if(ATEtoUART1 == 1)
-		printf("\r\nWF_GetMODE:strx|%s|end",strx);
+	ack = ESP32_UART_Checkcmd("+CWMODE:",500,1);//格局结果返回WiFi_State
+	if(ack){
+#if(WF_GetMODE_ack == 1)
+		printf("\r\nWF_GetMODE:ack|%s|end",ack);
 #endif
 
-		if(sscanf(strx,"+CWMODE:%hu",&MODE)){
-#if(ATEtoUART1 == 1)
+		if(sscanf(ack,"+CWMODE:%hu",&MODE)){
+#if(WF_GetMODE_sscanf == 1)
 		printf("\r\nWF_GetMODE:sscanf%d",MODE);
 #endif
 			switch(MODE){
@@ -150,15 +150,15 @@ WiFi_Mode WiFi_GetMODE(void){
 			}
 		}
 		else{
-#if(ATEtoUART1 == 1)
+#if(WF_GetMODE_sscanf == 1)
 			printf("\r\nWF_GetMODE:sscanfFail");
 #endif
 		}
 
-	}//strxOK
+	}//ACKOK
 	else{
-#if(ATEtoUART1 == 1)
-		printf("\r\nWF_GetState:strxNULL");
+#if(WF_GetMODE_ack == 1)
+		printf("\r\nWF_GetState:ackNULL");
 #endif
 	}//strxNULL
 	return ModeERR;
@@ -173,21 +173,27 @@ WiFi_Mode WiFi_GetMODE(void){
  */
 uint8_t WiFi_SetState(WiFi_Mode mode, uint8_t auto_connect){
 	if(ESP32_SendANDCheck(500,"OK","AT+CWMODE=%d,%d",mode ,auto_connect)){
+#if(WF_SetState_SorF == 1)
 		printf("\r\nWF_SetState:Fail1");
+#endif
 		ESP32_WiFi.WiFi_MODE = WiFi_GetMODE();
 		return 1;
 	}
 	else{
 		if(WiFi_GetMODE() == mode){
+#if(WF_SetState_SorF == 1)
 			printf("\r\nWF_SetState:Success ");
+#endif
 			ESP32_WiFi.WiFi_MODE = mode;
-#if(ATEtoUART1 == 1)
+#if(WF_SetState == 1)
 		printf("\r\nWF_SetState:%d",ESP32_WiFi.WiFi_MODE);
 #endif
 			return 0;
 		}
 		else{
+#if(WF_SetState_SorF == 1)
 			printf("\r\nWF_SetState:Fail2");
+#endif
 			return 2;
 		}
 	}
@@ -202,17 +208,17 @@ uint8_t WiFi_SetState(WiFi_Mode mode, uint8_t auto_connect){
  */
 WiFi_State WiFi_GetState(void){
 	unsigned short state = 0;
-	char* strx = NULL;
+	char* ack = NULL;
 
 	Clear_loopbuffer(500);
 	AT_Send("AT+CWSTATE?");//查询WiFi状态
-	strx = ESP32_UART_Checkcmd("+CWSTATE:",500,1);//格局结果返回WiFi_State
-	if(strx){
-#if(ATEtoUART1 == 1)
-		printf("\r\nWF_GetState:strx|%s|end",strx);
+	ack = ESP32_UART_Checkcmd("+CWSTATE:",500,1);//格局结果返回WiFi_State
+	if(ack){
+#if(WF_GetState_ack == 1)
+		printf("\r\nWF_GetState:ack|%s|end",ack);
 #endif
-		if(sscanf(strx,"+CWSTATE:%hu",&state)){
-#if(ATEtoUART1 == 1)
+		if(sscanf(ack,"+CWSTATE:%hu",&state)){
+#if(WF_GetState_sscanf == 1)
 		printf("\r\nWF_GetState:sscanf%d",state);
 #endif
 			switch(state){
@@ -231,14 +237,14 @@ WiFi_State WiFi_GetState(void){
 			}
 		}
 		else{
-#if(ATEtoUART1 == 1)
+#if(WF_GetState_sscanf == 1)
 			printf("\r\nWF_GetState:sscanfFail");
 #endif
 		}
 	}//strxOK
 	else{
-#if(ATEtoUART1 == 1)
-		printf("\r\nWF_GetState:strxNULL");
+#if(WF_GetState_ack == 1)
+		printf("\r\nWF_GetState:ackNULL");
 #endif
 	}//strxNULL
 	return StateERR;
@@ -250,13 +256,17 @@ WiFi_State WiFi_GetState(void){
  */
 void WiFi_DisConnect(){
 	if(ESP32_SendANDCheck(500,"OK","AT+CWQAP")){
+#if(WF_DisConnect_SorF == 1)
 		printf("\r\nWF_DisConnect:Fail ");
+#endif
 	}
 	else{
-		printf("\r\nWF_DisConnect:Success ");
 		ESP32_WiFi.WiFi_state = WiFi_GetState();
-#if(ATEtoUART1 == 1)
-		printf("\r\nWF_DisConnect:%d",ESP32_WiFi.WiFi_state);
+#if(WF_DisConnect_SorF == 1)
+		printf("\r\nWF_DisConnect:Success ");
+#endif
+#if(WF_DisConnect_state == 1)
+		printf("\r\nWF_DisState:%d",ESP32_WiFi.WiFi_state);
 #endif
 	}
 }
@@ -270,21 +280,30 @@ void WiFi_DisConnect(){
 uint8_t WiFi_Connect(char *SSID, char *PWD){
 	if(ESP32_SendANDCheck(16000,"WIFI GOT IP","AT+CWJAP=%s,%s",SSID ,PWD)){
 		ESP32_WiFi.WiFi_state = WiFi_GetState();
+#if(WF_Connect_SorF == 1)
 		printf("\r\nWF_Connect:Fail1");
+#endif
 		return 1;
 	}
 	else{
 		if(WiFi_GetState() == WiFi_connected){
 			ESP32_WiFi.WiFi_state = WiFi_GetState();
+#if(WF_Connect_SorF == 1)
 			printf("\r\nWF_Connect:Success ");
-#if(ATEtoUART1 == 1)
+#endif
+#if(WF_Connect_state == 1)
 		printf("\r\nWF_Connect:%d",ESP32_WiFi.WiFi_state);
 #endif
 			return 0;
 		}
 		else{
 			ESP32_WiFi.WiFi_state = WiFi_GetState();
+#if(WF_Connect_SorF == 1)
 			printf("\r\nWF_Connect:Fail2");
+#endif
+#if(WF_Connect_state == 1)
+			printf("\r\nWF_Connect:%d",ESP32_WiFi.WiFi_state);
+#endif
 			return 2;
 		}
 	}

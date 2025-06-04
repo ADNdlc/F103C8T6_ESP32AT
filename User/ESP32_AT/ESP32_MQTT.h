@@ -11,7 +11,7 @@
 #include "ESP32_UART.h"
 #include "sensor_data.h"
 
-/*===================================================MQTT信息========================================================*/
+/*==================================================MQTT信息========================================================*/
 
 //服务器地址和端口
 #define MQTT_host	"\"mqtts.heclouds.com\""	//域名
@@ -51,6 +51,32 @@
 #define Data_Info		"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"currentTemperature\":{\"value\":22,\"time\":1747458287111},\"currenthumidity\":{\"value\":33,\"time\":1747458287111}}}"
 
 #endif
+
+/*ߜ----------------------------------------ߜ打印信息开关ߜ---------------------------------------ߜ*/
+//ESP32_MQTT_Init:
+#define MQTT_Init_SorF_CFG	1	//CFG成败信息
+#define MQTT_Init_SorF_PWD	1	//PWD成败信息
+
+//MQTT_Connect:
+#define MQTT_Connect_SorF		1	//连接成败信息
+
+//MQTT_DisConnect:
+#define MQTT_DisConnect_SorF 	1	//断开成败信息
+
+//MQTT_Subscribe:
+#define MQTT_Subscribe_SorF	 	1	//订阅成败信息
+
+//MQTT_DisSubscribe:
+#define MQTT_DisSubscribe_SorF	1	//取消订阅成败信息
+
+//MQTT_Publish_Data:
+#define MQTT_Publish_SorF		1	//取消订阅成败信息
+
+//MQTT_Bulid_JSON:
+#define MQTT_Bulid_JSON_Info	1	//打印发布JSON
+
+/*ߡ-------------------------------------ߡ打印信息开关ߡ-----------------------------------------ߡ*/
+
 
 
 /*===================================================MQTT========================================================*/
@@ -101,10 +127,12 @@ void MQTT_DisConnect();
 
 uint16_t Calculate_json_length_simple(Sensor* S);
 uint16_t Calculate_json_length(Sensor* data);
+char* MQTT_Bulid_JSON(Sensor* S);
+/*===================================================发布订阅函数========================================================*/
 
-/*===================================================发布函数========================================================*/
-
-uint8_t MQTT_Publish_Data(uint8_t num, Sensor* S, const char* topic, uint8_t qos, uint8_t retain);
+uint8_t MQTT_Subscribe(uint8_t num, const char* topic ,uint8_t qos);
+uint8_t MQTT_DisSubscribe(uint8_t num, const char* topic);
+uint8_t MQTT_Publish_Data(uint8_t num, char* json, const char* topic, uint8_t qos, uint8_t retain);
 
 
 #endif /* ESP32_AT_ESP32_MQTT_H_ */

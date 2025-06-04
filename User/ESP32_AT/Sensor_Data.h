@@ -25,6 +25,10 @@
 }
 */
 
+
+//Sensor_Add_Point:
+#define reallocInfo		1
+
 /*=========================================数据点定义=============================================*/
 // 数据类型枚举
 typedef enum {
@@ -66,17 +70,13 @@ typedef struct {
 /*===============================================数据点函数====================================================*/
 
 DataPoint Sensor_Create_Point(const char* name, DataType type);
-
 void Sensor_Set_PointValue(DataPoint* point, ...);
 
 /*===============================================设备函数====================================================*/
 
 Sensor* Sensor_Init(const char* device_id, const char* version);
-
 bool Sensor_Add_Point(Sensor* SenIndex, DataPoint point);
-
 uint8_t Sensor_Change_PointValue(Sensor* S,const char* m_name, uint32_t time, DataType type, ...);
-
 void Sensor_Data_free(Sensor* SenIndex);
 
 

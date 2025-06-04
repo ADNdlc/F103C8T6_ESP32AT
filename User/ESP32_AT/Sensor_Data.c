@@ -103,7 +103,7 @@ bool Sensor_Add_Point(Sensor* SenIndex, DataPoint point) {
 		return true;
 	}
 	else{
-#if(ATEtoUART1 == 1)
+#if(reallocInfo == 1)
 		printf("\r\n\r\nAdd_Point:reallocFail");
 #endif
 		return false;//如果失败原来的内存块仍然保持不变（并没有释放，相当于没有做本次添加的操作）

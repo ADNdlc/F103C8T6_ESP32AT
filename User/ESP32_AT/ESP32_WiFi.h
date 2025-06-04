@@ -21,6 +21,37 @@
 #define AP_PWD  	"\"yu778866\""
 
 
+
+
+/*ߜ----------------------------------------ߜ打印信息开关ߜ---------------------------------------ߜ*/
+//ESP32_WiFi_Init:
+#define WiFi_Init			1	//UART初始化信息
+
+//WiFi_GetMODE:
+#define WF_GetMODE_ack		1	//是否检查到的答复内容
+#define WF_GetMODE_sscanf	1	//sscanf步骤执行情况
+
+//WiFi_SetState:
+#define WF_SetState			1	//打印获取到的状态,判断有没有设置成功
+#define WF_SetState_SorF	1	//成败信息
+
+//WiFi_GetState:
+#define WF_GetState_ack		1	//期望答复
+#define WF_GetState_sscanf	1	//打印获取到的状态
+
+//WiFi_DisConnect:
+#define WF_DisConnect_state	1	//打印获取到的状态
+#define WF_DisConnect_SorF	1	//成败信息
+
+//WiFi_Connect:
+#define WF_Connect_state	1	//打印获取到的状态
+#define WF_Connect_SorF		1	//成败信息
+
+/*ߡ-------------------------------------ߡ打印信息开关ߡ-----------------------------------------ߡ*/
+
+
+
+
 /*===================================================WiFi========================================================*/
 
 /*	<mode>：模式
