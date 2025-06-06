@@ -96,7 +96,6 @@ OK
 ```c
 AT+CIPSNTPCFG=<enable>,<timezone>,<"SNTP server1">,<"SNTP server2">,<"SNTP server3">
 AT+CIPSNTPCFG=1,8,"cn.ntp.org.cn"
-
 //响应：
 OK
 //间隔一会
@@ -114,7 +113,7 @@ OK
 
 
 
----
+—
 
 ## [设置 Wi-Fi 模式](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/Wi-Fi_AT_Commands.html#at-cwmode-wi-fi-station-softap-station-softap)
 
@@ -132,18 +131,12 @@ OK
 
 ### 连接网络
 
-#### [查询 Wi-Fi 状态和 Wi-Fi 信息:](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/Wi-Fi_AT_Commands.html#at-cwstate-wi-fi-wi-fi)
-
-```
-AT+CWSTATE?
-```
-
 #### 扫描WiFi:
 
 ```c
 AT+CWLAP
 //响应：
-+CWLAP:(3,"test2",-24,"e8:f4:08:78:21:87",1,-1,-1,0,0,7,1)
++CWLAP:(3,"test2",-24,"ea:54:08:89:21:20",1,-1,-1,4,4,7,1)
 ......
 ```
 
@@ -151,7 +144,7 @@ AT+CWLAP
 
 ```c
 AT+CWJAP=<"ssid">,<"pwd">,<"bssid">.......(详细参数见文档)
-AT+CWJAP="test2","123456"
+AT+CWJAP="test2","12345678"
 //响应：
 WIFI CONNECTED
 WIFI GOT IP
@@ -159,13 +152,13 @@ WIFI GOT IP
 OK
 ```
 
-#### 查询当前连接的WiFi：
+#### 查询当前WiFi：
 
 ```c
 AT+CWJAP?
 //响应：
 busy p...
-+CWJAP:"test2","ea:f8:78:be:21:87",1,-27,0,1,0,0,1
++CWJAP:"test2","ea:54:08:89:21:20",1,-27,0,1,3,0,1
 
 OK 
 ```
@@ -205,7 +198,7 @@ AT+CWJAP
 ```c
 AT+MQTTUSERCFG=<LinkID>,<scheme>,<"client_id">,<"username">,<"password">,<cert_key_ID>,<CA_ID>,<"path">
 
-AT+MQTTUSERCFG=0,1,"temperatureAndHumidity","SQKg8n0Ii0","",0,0,""
+AT+MQTTUSERCFG=0,1,"temperatureAndHumidity","SQKg9n0Ii0","",0,0,""
 //						<设备名称/ID>		<产品ID>
 ```
 
@@ -294,6 +287,8 @@ OK
 
 > <length>长度计算
 > [在线字符串长度计算工具](https://www.lddgo.net/string/stringlength)
+>
+> [**OneNET - Token算法**](https://open.iot.10086.cn/doc/v5/fuse/detail/1486)
 
 ```c
 AT+MQTTLONGPASSWORD=<LinkID>,<length>
@@ -304,7 +299,7 @@ OK
 
 >
 //输入：
-//version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757459887&method=md59uign=YCozJxz%2BPX0Qf1coXSUd0A%3D%3D
+//version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757458587&method=md5&sign=YCozJxz%2BPX0Qf1coXSUd0A%3D%3D
 //响应：
 busy p...
 
@@ -329,8 +324,10 @@ OK
 
 ## [连接 MQTT Broker](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttconn-mqtt-broker)
 
-> OneNet服务地址
-> [开发指南_开发者文档_OneNET](https://open.iot.10086.cn/doc/mqtt/book/device-develop/manual.html)
+> [OneNet服务地址](https://open.iot.10086.cn/doc/mqtt/book/device-develop/manual.html)
+>
+> [OneNET - 通信主题列表](https://open.iot.10086.cn/doc/v5/fuse/detail/920)
+
 
 ```c
 AT+MQTTCONN=<LinkID>,<"host">,<port>,<reconnect>
@@ -386,7 +383,7 @@ OK
 
 ### [订阅 MQTT Topic](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttsub-mqtt-topic)
 
-> [协议规范_开发者文档_OneNET](https://open.iot.10086.cn/doc/mqtt/book/device-develop/protocol.html)
+> [OneNET - 通信主题](https://open.iot.10086.cn/doc/v5/fuse/detail/920)
 
 
 
@@ -394,6 +391,7 @@ OK
 
 ```c
 AT+MQTTSUB=<LinkID>,<"topic">,<qos>
+//这里订阅设备属性上报响应
 AT+MQTTSUB=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply",0
 //响应：
     
@@ -421,6 +419,8 @@ OK
 
 ### [发布长 MQTT 消息](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttpubraw-mqtt)
 
+> [OneNET - 设备属性上报](https://open.iot.10086.cn/doc/v5/fuse/detail/902)
+
 通过 topic 发布长 MQTT 消息。如果您发布消息的数据量相对较少，不大于单条 AT 命令的长度阈值 `256` 字节，也可以使用 [AT+MQTTPUB](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#cmd-mqttpub) 命令。
 
 ```c
@@ -445,7 +445,6 @@ OK
 示例：
 
 ```c
-AT+MQTTPUBRAW=<LinkID>,<"topic">,<length>,<qos>,<retain>
 AT+MQTTPUBRAW=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post",146,0,0
 //响应：
 OK

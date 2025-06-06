@@ -51,7 +51,6 @@ typedef enum
 	Writing   = 0x03U,	//返回消息等待写入缓冲区
 	SendERR	  =	0x04U,	//发送溢出
 	Overload  = 0x05
-
 } UART_State;
 
 typedef enum
@@ -67,7 +66,7 @@ typedef struct{
 
 	UART_State 	Uart_State;				//模块串口状态
 	CMD_State	Cmd_State;				//模块命令状态
-	uint8_t		overmuch;	//有没有模块一直发送消息不停止的情况
+	uint8_t		overmuch;				//接收不过来了
 
 	uint16_t	writeIndex;				//写索引
 	uint16_t	readIndex;				//读索引

@@ -132,6 +132,7 @@ void btn2_triple_click(Button* btn) {
 	printf("\r\nbtn2_triple_click\r\n");
     // 三击处理
 
+
 }
 void btn2_long_click(Button* btn) {
 	printf("\r\nbtn2_long_click\r\n");
@@ -156,6 +157,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){	//1S周期回调
 	}
 }
 
+
 extern DMA_HandleTypeDef hdma_usart1_rx;//声明外部句柄
 char receivData[50] = {0};//存放接收内容(记得初始化)
 uint8_t dataReady;//发送标志位
@@ -178,6 +180,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
 	ESP32_RxCpltHandle(huart,Size);//处理ESP32回传数据
 }
+
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {

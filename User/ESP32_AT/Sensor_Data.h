@@ -16,7 +16,7 @@
 /*
 上报JSON格式
 {
-	"id":"abc123","version":"1.0.b","params":{
+	"id":"123","version":"1.0","params":{
 		"currentTemperature":{"value":22,"time":1747458287111},
 		"currenthumidity":{"value":33,"time":1747458287111},
 		"标识符":{"value":<指定的数据类型>,"time":<毫秒时间戳>}

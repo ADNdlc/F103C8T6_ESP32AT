@@ -140,8 +140,8 @@ void AT_Send(const char* __restrict__ Command, ...){
 
 		char buffer[1024];  //缓冲区大小(至少要装下网站的token)
 		va_list args;
-
 		va_start(args, Command);
+
 		vsnprintf(buffer, sizeof(buffer), Command, args);
 		va_end(args);
 
@@ -227,7 +227,8 @@ void AT_Send_HEX(uint8_t* buffer){
  * 			函数在本次指令响应接收字符串 cmd_buffer 中查找第一次出现 期望答复(str不包含空结束字符）的位置
  * 			没有找到等待下一次响应，直到重试次数用完或者接收到期望答复(str)，成功后此时strx指向cmd_buffer中
  * 			期望答复(str)的开头,并在str长度后截断剩下的所有响应,可以用extend延后截断位置,让返回指针能够访问
- *
+ *			例：+CIPSNTPTIME:Fri May 30 18:06:18 2025
+ *			+CIPSNTPTIME:\0
  * @param	str 		应该收到的内容
  * @param	waittime 	等待时间
  * @param	extend 		是否延长，一般为0也就是只返回期望答复的字符串地址，如果答复后有要访问的数据用此参数延长
@@ -301,7 +302,7 @@ char* ESP32_UART_Checkcmd(char *ack, uint32_t waittime,uint8_t extend){
  * @return	0/1  成功返回0
  *
  */
-uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *espack, const char* __restrict__ Command, ...){
+uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *ack, const char* __restrict__ Command, ...){
 	char buffer[1024];  //缓冲区大小(至少要装下网站的token)
 	va_list args;
 	va_start(args, Command);
@@ -316,7 +317,7 @@ uint8_t ESP32_SendANDCheck(uint32_t waittime,  char *espack, const char* __restr
 	AT_Send_callee(buffer,length,buf_length);//发送
 
 	char* xstr;
-	xstr = ESP32_UART_Checkcmd(espack,waittime,0);
+	xstr = ESP32_UART_Checkcmd(ack,waittime,0);
 	if( xstr != NULL){
 
 #if(SendANDCheck_ack == 1)

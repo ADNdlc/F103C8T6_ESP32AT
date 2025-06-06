@@ -22,8 +22,8 @@
 #define	scheme		1						//连接方式
 
 
-#define msg_ID "\"123\""
-#define mqtt_version "\"1.0\""
+#define msg_ID "\"123\""			//消息id号，用户自定义，String类型的数字，长度限制不超过13位
+#define mqtt_version "\"1.0\""		//物模型版本号，可选字段，不填默认为1.0
 
 
 #define	client_id	"\"temperatureAndHumidity\""	//网站的	“设备名称/ID”
@@ -44,8 +44,12 @@
 
 #ifdef dht11
 
-#define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""//这是信息回复主题
-#define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""//本地数据推送主题
+/*================主题===================*/
+//https://open.iot.10086.cn/doc/v5/fuse/detail/920
+#define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""//这是信息回复主题,即响应Topic
+#define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""//本地数据推送主题，即请求Topic
+
+
 
 //传感器数据推送格式
 #define Data_Info		"{\"id\":\"123\",\"version\":\"1.0\",\"params\":{\"currentTemperature\":{\"value\":22,\"time\":1747458287111},\"currenthumidity\":{\"value\":33,\"time\":1747458287111}}}"
