@@ -73,10 +73,14 @@ void SystemClock_Config(void);
 uint8_t DHT11time = 0;
 char humitureDATA[25] = {0};//存放传感器显示内容
 
+//*==========================================LED==========================================*//
+uint8_t LED_State = 0;
+
 //*==========================================时间戳获取==========================================*//
 uint32_t Timestamp = 0;
 uint8_t updatetime = 0;
 char TimestampDATA[25] = {0};
+uint8_t stop = 0;
 
 //*==========================================模块状态==========================================*//
 char ESP_State[25] = {0};
@@ -151,7 +155,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){	//1S周期回调
 		{
 			fps_max = fps;
 		}
-		fps = 0;
+		fps = 0;stop = 0;
 		updatetime++;
 		DHT11time++;
 	}
@@ -251,6 +255,7 @@ int main(void)
 	  SetServer(3);//SNTP服务器
 	  if(ESP32_MQTT.MQTT_state == MQTT_connected){
 		  MQTT_Subscribe(2,Info_Topic,0);
+		  MQTT_Subscribe(2,subscribe_Topic,0);
 	  }
   }
 
@@ -266,7 +271,6 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim2);//开启定时
 
-  char* onenetack = NULL;
 
   /* USER CODE END 2 */
 
@@ -280,7 +284,23 @@ int main(void)
 		  dataReady = 0;
 	  }
 
-	  if((updatetime>=5)&&(ESP_time.ServerON)){
+	  if(((updatetime%1) == 0)&&stop==0){
+		  printf("\r\nCheckSET");
+		  stop = 1;
+		  if(( LED_State = MQTT_Check_PropertySet("+MQTTSUBRECV:") )){
+			  if(LED_State == 1){
+				  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+				  printf("\r\nture");
+			  }
+			  else if(LED_State == 2){
+				  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+				  printf("\r\nfalse");
+			  }
+		  }
+	  }
+
+
+	  if((updatetime>=6)&&(ESP_time.ServerON)){
 
 		  GET_Time(500,3);//更新时间
 		  Timestamp = cst_to_unix(&ESP_time);
@@ -290,7 +310,7 @@ int main(void)
 		  updatetime = 0;
 	  }
 
-	  if((DHT11time>=5)){
+	  if((DHT11time>=6)){
 		  //读取传感器值,值在humiture数组里
 		  DHT11_ReadData(humiture);
 		  if(ESP32_MQTT.MQTT_state==MQTT_connected){
@@ -298,12 +318,6 @@ int main(void)
 		  }
 		  DHT11time = 0;
 	  }
-
-	  onenetack = ESP32_UART_Checkcmd("+MQTTSUBRECV",100,0);
-	  if(onenetack){
-		  printf("%s",onenetack);
-	  }
-
 
 
 
@@ -313,7 +327,7 @@ int main(void)
 
 	//显示
 	OLED_NewFrame();
-	sprintf(buffer,"%u %u A", fps_max, fps);
+	sprintf(buffer,"%u %u S", fps_max, fps);
 	sprintf(humitureDATA,"T:%02d H:%02d", humiture[1], humiture[0]);
 	sprintf(TimestampDATA,"%lu",Timestamp);//显示时间戳
 	sprintf(ESP_State,"Cm%d WF%d MQ%d",ESP32_UART.Cmd_State,ESP32_WiFi.WiFi_state,ESP32_MQTT.MQTT_state);//显示状态

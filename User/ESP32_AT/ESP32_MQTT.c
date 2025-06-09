@@ -74,6 +74,7 @@ void ESP32_MQTT_Init(uint8_t num){
 	}
 }
 
+/*======================================MQTT相关======================================*/
 
 /* @brief	连接MQTT服务器
  *
@@ -244,6 +245,70 @@ uint8_t MQTT_Publish_Data(uint8_t num, char* json, const char* topic, uint8_t qo
     return 2;
 }
 
+/*	@brief			检查云端命令
+ *
+ *	@param setRECV	检查接收到MQTT推送时模块的信息
+ *
+ *	@return			动作
+ *
+ */
+uint8_t MQTT_Check_PropertySet(const char* setRECV){
+	//+MQTTSUBRECV..一共70个..property/(set/reply)偏移70查看下发消息类型
+
+	uint16_t SetID = 0;;
+	char funcPoint[64];
+	char PropertySet[32];
+
+	char *strx = NULL;
+	uint16_t size = 0;
+	static uint8_t SetBuffr[256] = {0};//接收消息缓存
+
+	if((size = Get_UNhandled())){
+		ESP32_UART.Cmd_State = CMDHandle;
+		for(uint16_t i=0; i < size; i++){//使用Read_buffer读出,不增加读指针
+			SetBuffr[i] = Read_buffer(ESP32_UART.readIndex + i);
+		}
+
+#if(MQTT_Subscribe_Set == 1)
+				printf("\r\nSetBuffr:|%s|\r\n",SetBuffr);
+#endif
+
+		ESP32_UART.Cmd_State = Success;
+		strx = strstr((char*)SetBuffr,setRECV);
+		if(strx!=NULL && (strx + 70 - (char*)SetBuffr) < sizeof(SetBuffr)){
+			if(!strcmp((strx+70),"set")){//是设置消息
+				//提取id
+				strx = strstr((char*)SetBuffr,"id");
+				if(( 1 == sscanf((strx+5),"%d",&SetID) )){
+					//还没想好
+				}
+#if(MQTT_Subscribe_Set == 1)
+				printf("MQTTSet:%d",SetID);
+#endif
+				//提取命令
+				strx = strstr((char*)SetBuffr,"\"params\"");
+				//strx现在指向"params....
+				if(1 == sscanf((strx),"\"params\":{\"%s\":%s}",funcPoint,PropertySet)){
+					if(strstr((char*)PropertySet,"true")){
+						return 1;
+					}
+					else if(strstr((char*)PropertySet,"false")){
+						return 2;
+					}
+				}
+
+			}
+			else if(!strcmp((strx+70),"reply")){//不是设置消息(是发送回复)
+				return 0;
+			}
+			else{
+				return 0;
+			}
+		}
+		return 0;
+	}
+	return 0;
+}
 
 
 /*==============================================JSON字符相关=================================================*/

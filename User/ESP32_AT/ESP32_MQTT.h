@@ -48,7 +48,7 @@
 //https://open.iot.10086.cn/doc/v5/fuse/detail/920
 #define Info_Topic		"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply\""//这是信息回复主题,即响应Topic
 #define publish_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post\""//本地数据推送主题，即请求Topic
-
+#define subscribe_Topic	"\"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/set\""
 
 
 //传感器数据推送格式
@@ -69,6 +69,8 @@
 
 //MQTT_Subscribe:
 #define MQTT_Subscribe_SorF	 	1	//订阅成败信息
+
+#define MQTT_Subscribe_Set		1	//云设置主题有信息
 
 //MQTT_DisSubscribe:
 #define MQTT_DisSubscribe_SorF	1	//取消订阅成败信息
@@ -137,6 +139,6 @@ char* MQTT_Bulid_JSON(Sensor* S);
 uint8_t MQTT_Subscribe(uint8_t num, const char* topic ,uint8_t qos);
 uint8_t MQTT_DisSubscribe(uint8_t num, const char* topic);
 uint8_t MQTT_Publish_Data(uint8_t num, char* json, const char* topic, uint8_t qos, uint8_t retain);
-
+uint8_t MQTT_Check_PropertySet(const char* setRECV);
 
 #endif /* ESP32_AT_ESP32_MQTT_H_ */

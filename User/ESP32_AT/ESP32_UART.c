@@ -237,7 +237,7 @@ void AT_Send_HEX(uint8_t* buffer){
  *
  */
 char* ESP32_UART_Checkcmd(char *ack, uint32_t waittime,uint8_t extend){
-	static uint8_t cmd_buffer[512];//这是所有消息公用的最后的存储区
+	static uint8_t cmd_buffer[512] = {0};//这是所有消息公用的最后的存储区
 	uint32_t Time=0;//上次收到消息时间
 	char *strx = NULL;
 	uint16_t Size=0;
