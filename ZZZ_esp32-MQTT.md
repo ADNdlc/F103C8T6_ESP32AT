@@ -299,7 +299,7 @@ OK
 
 >
 //输入：
-//version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757458587&method=md5&sign=YCozJxz%2BPX0Qf1coXSUd0A%3D%3D
+//version=2018-10-31&res=products%2FSQKg9n0Ii0%2Fdevices%2FtemperatureAndHumidity&et=1757458587&method=md5&sign=YCozJxz%2BPX0Qf1coFGDd0A%3D%3D
 //响应：
 busy p...
 
@@ -413,7 +413,78 @@ OK
 OK
 ```
 
+---
 
+#### [取消订阅 MQTT Topic](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttunsub-mqtt-topic)
+
+客户端取消订阅指定 topic，可多次调用本命令，以取消订阅不同的 topic。
+
+```c
+AT+MQTTUNSUB=<LinkID>,<"topic">
+//响应
+OK
+
+AT+MQTTUNSUB=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply"
+OK
+```
+
+若未订阅过该 topic，则返回：
+
+```c
+NO UNSUBSCRIBE
+
+OK
+```
+
+
+
+#### 接收云平台命令
+
+> [OneNET - 5. 设备属性设置](https://open.iot.10086.cn/doc/v5/fuse/detail/922)
+
+```c
+//设备侧需要收到平台下发的数据，需要订阅：
+$sys/{pid}/{device-name}/thing/property/set
+//订阅设备属性设置主题：
+AT+MQTTSUB=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/set",0
+```
+
+**这里定义一个bool功能点:**
+
+![image-20250609125823779](../../../AppData/Roaming/Typora/typora-user-images/image-20250609125823779.png)
+
+**设置属性ture-ON**
+
+> [发布 MQTT 消息（字符串](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttpub-mqtt)
+
+```c
+//发送命令后可看到模块:
++MQTTSUBRECV:0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/set",49,{"id":"12","version":"1.0","params":{"LED":true}}
+//注意"id":"1"回复时需要匹配
+//如果一定时间内不回复：
+```
+
+![image-20250609130740399](../../../AppData/Roaming/Typora/typora-user-images/image-20250609130740399.png)
+
+```c
+//设置成功回复：
+$sys/{pid}/{device-name}/thing/property/set_reply	//回复主题
+//回复内容：
+{
+	"id": "2",
+	"code": 200,
+	"msg": "success"
+}
+其中id为下行数据的id，需要匹配，code为200代表成功，按需匹配，msg可以自定义。
+//模块命令：
+AT+MQTTPUBRAW=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/set_reply",38,0,0
+//等待 > 然后发送：
+{"id":"12","code":200,"msg":"success"}
+```
+
+然后网站可看到成功设置和模块回复消息：
+
+![image-20250609133050883](../../../AppData/Roaming/Typora/typora-user-images/image-20250609133050883.png)
 
 ---
 
@@ -459,31 +530,6 @@ busy p...
 +MQTTSUBRECV:0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply",39,{"id":"123","code":200,"msg":"success"}
 
 //打开网站查看设备详情里的属性栏，可见数据点值刷新，推送成功
-```
-
-
-
----
-
-### [取消订阅 MQTT Topic](https://docs.espressif.com/projects/esp-at/zh_CN/latest/esp32/AT_Command_Set/MQTT_AT_Commands.html#at-mqttunsub-mqtt-topic)
-
-客户端取消订阅指定 topic，可多次调用本命令，以取消订阅不同的 topic。
-
-```c
-AT+MQTTUNSUB=<LinkID>,<"topic">
-//响应
-OK
-
-AT+MQTTUNSUB=0,"$sys/SQKg9n0Ii0/temperatureAndHumidity/thing/property/post/reply"
-OK
-```
-
-若未订阅过该 topic，则返回：
-
-```c
-NO UNSUBSCRIBE
-
-OK
 ```
 
 
